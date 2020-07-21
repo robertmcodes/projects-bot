@@ -1,0 +1,11 @@
+# NPM
+node_modules
+
+# Production output
+lib
+
+# Configuration
+.env
+
+# Logs
+*.log
