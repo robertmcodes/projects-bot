@@ -18,6 +18,7 @@
     "@typescript-eslint"
   ],
   "rules": {
-    "no-void": "off"
+    "no-void": "off",
+    "@typescript-eslint/restrict-template-expressions": "off"
   }
 }

@@ -20,8 +20,10 @@
   },
   "homepage": "https://github.com/TheCodingDen/projects-bot#readme",
   "dependencies": {
+    "@types/fs-extra": "^9.0.1",
     "discord.js": "^12.2.0",
     "dotenv-safe": "^8.2.0",
+    "fs-extra": "^9.0.1",
     "import-modules": "^2.0.0",
     "winston": "^3.3.3"
   },

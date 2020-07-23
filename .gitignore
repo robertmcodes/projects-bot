@@ -8,4 +8,7 @@ lib
 .env
 
 # Logs
-*.log
+logs/*
+
+# Database
+data/*

@@ -2,9 +2,11 @@ import dotenv from 'dotenv-safe'
 import { Client, ClientEvents } from 'discord.js'
 import * as logger from './utils/logger'
 import eventHandlers from './events'
+import ensureRequiredDirectories from './utils/ensureRequiredDirectories'
 
 global.log = logger.init()
 dotenv.config()
+ensureRequiredDirectories()
 
 const client = new Client()
 
