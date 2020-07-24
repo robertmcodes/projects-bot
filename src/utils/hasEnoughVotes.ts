@@ -1,7 +1,7 @@
 import Discord from 'discord.js'
 import { Project } from '../typings/interfaces'
 
-export default (type: 'up' | 'down', voter: Discord.GuildMember, project: Project): boolean => {
+export default (type: 'up' | 'down', operation: 'add' | 'remove', voter: Discord.GuildMember, project: Project): boolean => {
   // The elses of these conditionals will never fire because the app will not start without these variables being defined; this is just here to satisfy TS
   const staffRole = process.env.STAFF_ROLE_ID !== undefined ? process.env.STAFF_ROLE_ID : '257497572183113728'
   const veteransRole = process.env.VETERANS_ROLE_ID !== undefined ? process.env.VETERANS_ROLE_ID : '172018903424172032'
@@ -12,7 +12,10 @@ export default (type: 'up' | 'down', voter: Discord.GuildMember, project: Projec
   const staffThreshold = process.env.STAFF_VOTING_THRESHOLD !== undefined ? +process.env.STAFF_VOTING_THRESHOLD : 1
   const veteransThreshold = process.env.VETERANS_VOTING_THRESHOLD !== undefined ? +process.env.VETERANS_VOTING_THRESHOLD : 3
 
-  const newVoteCount = type === 'up' ? project.upvotes + 1 : project.upvotes - 1
+  const newVoteCount = operation === 'add'
+    ? project[type === 'up' ? 'upvotes' : 'downvotes'] + 1
+    : project[type === 'up' ? 'upvotes' : 'downvotes'] - 1
+
   let hasEnoughVotes
 
   if (isStaff) {

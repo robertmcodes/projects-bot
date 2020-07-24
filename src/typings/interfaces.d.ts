@@ -28,16 +28,10 @@ export interface Project {
   }
 }
 
-export interface UpvoteResult {
+export interface VoteResult {
   success: boolean
-  wasApproved: boolean
+  wasApproved?: boolean
+  wasRejected?: boolean
   reason: string
-  project: Project
-}
-
-export interface DownvoteResult {
-  success: boolean
-  wasRejected: boolean
-  reason: string
-  project: Project
+  project: Project | undefined
 }

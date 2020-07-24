@@ -1,7 +1,7 @@
 import path from 'path'
 import nedb from 'nedb-promises'
 import Discord from 'discord.js'
-import { ProjectSubmission, Project, UpvoteResult, DownvoteResult } from '../typings/interfaces'
+import { ProjectSubmission, Project, VoteResult } from '../typings/interfaces'
 import hasEnoughVotes from '../utils/hasEnoughVotes'
 
 let db: nedb
@@ -35,18 +35,18 @@ export async function registerProject (submission: ProjectSubmission): Promise<v
   })
 }
 
-export async function upvoteProject (id: Discord.Snowflake, upvoter: Discord.GuildMember): Promise<UpvoteResult> {
+export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteResult> {
   const project: Project = await db.findOne({ id })
 
   if (project === undefined) {
-    log.error(`User ${upvoter} attempted to upvote non-existent project with ID ${id}`)
+    log.error(`User ${voter} attempted to ${type === 'add' ? 'upvote' : 'remove upvote for'} non-existent project (ID ${id})`)
     return { success: false, wasApproved: false, reason: 'Project not found', project }
   } else {
-    const hasEnoughUpvotes = hasEnoughVotes('up', upvoter, project)
+    const hasEnoughUpvotes = hasEnoughVotes('up', type, voter, project)
 
     const toUpdate = {
       ...project,
-      upvotes: ++project.upvotes,
+      upvotes: type === 'add' ? ++project.upvotes : --project.upvotes,
       approved: hasEnoughUpvotes
     }
 
@@ -60,18 +60,18 @@ export async function upvoteProject (id: Discord.Snowflake, upvoter: Discord.Gui
   }
 }
 
-export async function downvoteProject (id: Discord.Snowflake, downvoter: Discord.GuildMember): Promise<DownvoteResult> {
+export async function adjustDownvotesForProject (type: 'add' | 'remove', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteResult> {
   const project: Project = await db.findOne({ id })
 
   if (project === undefined) {
-    log.error(`User ${downvoter} attempted to downvote non-existent project with ID ${id}`)
+    log.error(`User ${voter} attempted to ${type === 'add' ? 'downvote' : 'remove downvote for'} non-existent project (ID ${id})`)
     return { success: false, wasRejected: false, reason: 'Project not found', project }
   } else {
-    const hasEnoughDownvotes = hasEnoughVotes('down', downvoter, project)
+    const hasEnoughDownvotes = hasEnoughVotes('down', type, voter, project)
 
     const toUpdate = {
       ...project,
-      upvotes: --project.downvotes,
+      downvotes: type === 'add' ? ++project.downvotes : --project.downvotes,
       rejected: hasEnoughDownvotes
     }
 
