@@ -1,20 +1,23 @@
 import Discord from 'discord.js'
+import safeSendMessage from '../utils/safeSendMessage'
 import parseGformsEmbed from '../utils/parseGformsEmbed'
 import { checkForDuplicates, registerProject } from '../db'
 
 export default async (client: Discord.Client, message: Discord.Message): Promise<Discord.Message | undefined> => {
+  const { channel } = message
+
   // Ignore all messages sent outside of the webhook channel by anything else than the webhook
-  const isInSubmissionChannel = message.channel.id === process.env.PROJECT_SUBMISSIONS_CHANNEL
+  const isInSubmissionChannel = channel.id === process.env.PROJECT_SUBMISSIONS_CHANNEL
   const isFromWebhook = message.webhookID === process.env.GOOGLE_FORMS_WEBHOOK_ID
 
   if (isInSubmissionChannel && isFromWebhook) {
     if (message.embeds.length === 0) {
       log.warn(`Submission ${message.id} contained no embeds, skipping`)
-      void message.channel.send('⚠️ Could not register submission, message contained no embeds.')
+      void safeSendMessage(channel, '⚠️ Could not register submission, message contained no embeds.')
     } else {
       if (message.embeds.length > 1) {
         log.warn(`Detected anomalous amount of embeds in submission ${message.id}; expected 1, got ${message.embeds.length} - selecting embed at index 0`)
-        void message.channel.send('⚠️ Submission contains more than one embed. Selecting first and ignoring subsequent ones.')
+        void safeSendMessage(channel, '⚠️ Submission contains more than one embed. Selecting first and ignoring subsequent ones.')
       }
 
       let submission
@@ -23,7 +26,7 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
         submission = parseGformsEmbed(message)
       } catch (err) {
         log.error(`Parsing of submission ${message.id} failed: ${err}`)
-        return await message.channel.send('⚠️ Could not parse submission, possibly incorrect amount of fields? (Parser error)')
+        return await safeSendMessage(channel, '⚠️ Could not parse submission, possibly incorrect amount of fields? (Parser error)')
       }
 
       let isDuplicate
@@ -32,12 +35,12 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
         isDuplicate = await checkForDuplicates(submission)
       } catch (err) {
         log.error(`Duplicate checking for submission ${message.id} failed: ${err}`)
-        return await message.channel.send('⚠️ Could not check submission for duplicates, possibly incorrect amount of fields? (Database error)')
+        return await safeSendMessage(channel, '⚠️ Could not check submission for duplicates, possibly incorrect amount of fields? (Database error)')
       }
 
       if (isDuplicate) {
         log.warn(`Duplicate detected for project ${submission.name} with source link ${submission.links.source} (Submission ${message.id})`)
-        void message.channel.send('⚠️ Submission appears to be a duplicate (one or more projects with same name and/or source link found). Review recommended.')
+        void safeSendMessage(channel, '⚠️ Submission appears to be a duplicate (one or more projects with same name and/or source link found). Review recommended.')
       }
 
       try {
@@ -48,17 +51,17 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
         await message.react(downvoteReaction)
       } catch (err) {
         log.error(`Could not add upvote and downvote reaction to submission ${message.id}: ${err}`)
-        return await message.channel.send('⚠️ Could not add upvote and downvote reactions. (Discord error)')
+        return await safeSendMessage(channel, '⚠️ Could not add upvote and downvote reactions. (Discord error)')
       }
 
       try {
         await registerProject(submission)
       } catch (err) {
         log.error(`Project registration for submission ${message.id} failed: ${err}`)
-        return await message.channel.send('⚠️ Project registration failed. (Database error)')
+        return await safeSendMessage(channel, '⚠️ Project registration failed. (Database error)')
       }
 
-      void message.channel.send('✅ Project registered for voting! Please review as soon as possible.')
+      void safeSendMessage(channel, '✅ Project registered for voting! Please review as soon as possible.')
     }
   }
 }

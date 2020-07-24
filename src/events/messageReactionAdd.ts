@@ -1,4 +1,5 @@
 import Discord from 'discord.js'
+import safeSendMessage from '../utils/safeSendMessage'
 import { adjustUpvotesForProject, adjustDownvotesForProject } from '../db'
 
 export default async (client: Discord.Client, reaction: Discord.MessageReaction, user: Discord.User): Promise<Discord.Message | undefined> => {
@@ -16,12 +17,12 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
       member = await guild?.members.fetch(user.id)
     } catch (err) {
       log.error(`Could not fetch reacting member: ${err}`)
-      return await channel.send('⚠️ Your vote was not possible to register due to identification failure. (Discord error)')
+      return await safeSendMessage(channel, '⚠️ Your vote was not possible to register due to identification failure. (Discord error)')
     }
 
     // Check that member existed in cache
     if (member === undefined) {
-      return await channel.send('⚠️ Your vote was not possible to register due to identification failure. (Member not found in guild)')
+      return await safeSendMessage(channel, '⚠️ Your vote was not possible to register due to identification failure. (Member not found in guild)')
     }
 
     // Don't need to check anything more here as checks that the other emoji is a downvote are already performed upstream
@@ -37,7 +38,7 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
     // Alert of errors during the vote process
     if (!success || project === undefined) {
       log.error(`Could not register ${user.id}'s vote for project ${project?.name} (ID ${project?.id}): ${reason}`)
-      return await channel.send('⚠️ Your vote was not possible to register. (Internal error)')
+      return await safeSendMessage(channel, '⚠️ Your vote was not possible to register. (Internal error)')
     }
 
     // Only one of these can be true per operation depending on what reaction was used
@@ -47,13 +48,13 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
     // If project was approved/rejected, log such and (try to) delete submission post
     if (wasApproved || wasRejected) {
       log.info(`Project ${project.name} (ID ${project.id}) was ${wasApproved ? 'APPROVED' : 'REJECTED'} with ${project.upvotes} upvotes and ${project.downvotes} downvotes`)
-      await channel.send(`✅ Project ${project.name} [${project.links.source}] (ID ${project.id}) was **${wasApproved ? 'APPROVED' : 'REJECTED'}** by **${user.tag}** (${user.id}) with ${project.upvotes} upvotes and ${project.downvotes} downvotes.`)
+      await safeSendMessage(channel, `✅ Project ${project.name} [${project.links.source}] (ID ${project.id}) was **${wasApproved ? 'APPROVED' : 'REJECTED'}** by **${user.tag}** (${user.id}) with ${project.upvotes} upvotes and ${project.downvotes} downvotes.`)
 
       try {
         await reaction.message.delete({ reason: `Project ${wasApproved ? 'approved' : 'rejected'} by ${user.tag} (${user.id})` })
       } catch (err) {
         log.error(`Could not delete submission post for ${project.name} (ID ${project.id}): ${err}`)
-        await channel.send(`⚠️ Could not delete project submission post. Please delete message ${project.id} manually. (Discord error)`)
+        await safeSendMessage(channel, `⚠️ Could not delete project submission post. Please delete message ${project.id} manually. (Discord error)`)
       }
     }
 
