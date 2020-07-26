@@ -60,8 +60,6 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
         log.error(`Project registration for submission ${message.id} failed: ${err}`)
         return await safeSendMessage(channel, '⚠️ Project registration failed. (Database error)')
       }
-
-      void safeSendMessage(channel, '✅ Project registered for voting! Please review as soon as possible.')
     }
   }
 }
