@@ -35,6 +35,11 @@ export async function registerProject (submission: ProjectSubmission): Promise<v
   })
 }
 
+export async function getProject (id: Discord.Snowflake): Promise<Project | undefined> {
+  const project: Project = await db.findOne({ id })
+  return project
+}
+
 export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteResult> {
   const project: Project = await db.findOne({ id })
 
