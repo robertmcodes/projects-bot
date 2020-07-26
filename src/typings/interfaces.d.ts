@@ -3,7 +3,7 @@ import Discord from 'discord.js'
 export interface ProjectSubmission {
   id: Discord.Snowflake
   name: string
-  author: string
+  author: Discord.Snowflake
   description: string
   tech: string
   links: {
@@ -19,7 +19,7 @@ export interface Project {
   rejected: boolean
   id: Discord.Snowflake
   name: string
-  author: string
+  author: Discord.Snowflake
   description: string
   tech: string
   links: {
