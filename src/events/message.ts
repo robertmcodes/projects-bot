@@ -44,8 +44,8 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
       }
 
       try {
-        const upvoteReaction = process.env.UPVOTE_REACTION !== undefined ? process.env.UPVOTE_REACTION : '430119347881771018'
-        const downvoteReaction = process.env.UPVOTE_REACTION !== undefined ? process.env.UPVOTE_REACTION : '430119368735850506'
+        const upvoteReaction = process.env.UPVOTE_REACTION ?? '430119347881771018'
+        const downvoteReaction = process.env.UPVOTE_REACTION ?? '430119368735850506'
 
         await message.react(upvoteReaction)
         await message.react(downvoteReaction)

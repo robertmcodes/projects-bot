@@ -1,7 +1,7 @@
 import Discord from 'discord.js'
 
 export default (client: Discord.Client): void => {
-  log.info(`Logged in as ${client.user?.tag !== undefined ? client.user.tag : ''}`)
+  log.info(`Logged in as ${client.user?.tag ?? ''}`)
 
   void client.user?.setPresence({
     status: 'online',

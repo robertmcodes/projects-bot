@@ -4,7 +4,7 @@ import { adjustUpvotesForProject, adjustDownvotesForProject } from '../db'
 
 export default async (client: Discord.Client, reaction: Discord.MessageReaction, user: Discord.User): Promise<Discord.Message | undefined> => {
   // Ensure reaction was not added in DM, even though the ID check would already technically speaking prevent this
-  if (reaction.message.guild !== null) {
+  if (reaction.message.guild) {
     const { id, channel, guild } = reaction.message
 
     const isNotSelf = user.id !== client.user?.id

@@ -17,7 +17,7 @@ for (const event in eventHandlers) {
 
   // Have to check for undefined here to stop TS screeching that the function might be undefined
   // Which in turn happens due to the black magic typecasting I have to do in order to get plug-and-play event handler imports working
-  if (currentEventHandler !== undefined) {
+  if (currentEventHandler) {
     client.on(currentEvent, (...params) => currentEventHandler(client, ...params))
   }
 }
