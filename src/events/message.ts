@@ -13,11 +13,11 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
   if (isInSubmissionChannel && isFromWebhook) {
     if (message.embeds.length === 0) {
       log.warn(`Submission ${message.id} contained no embeds, skipping`)
-      void safeSendMessage(channel, '⚠️ Could not register submission, message contained no embeds.')
+      await safeSendMessage(channel, '⚠️ Could not register submission, message contained no embeds.')
     } else {
       if (message.embeds.length > 1) {
         log.warn(`Detected anomalous amount of embeds in submission ${message.id}; expected 1, got ${message.embeds.length} - selecting embed at index 0`)
-        void safeSendMessage(channel, '⚠️ Submission contains more than one embed. Selecting first and ignoring subsequent ones.')
+        await safeSendMessage(channel, '⚠️ Submission contains more than one embed. Selecting first and ignoring subsequent ones.')
       }
 
       let submission
@@ -40,12 +40,16 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
 
       if (isDuplicate) {
         log.warn(`Duplicate detected for project ${submission.name} with source link ${submission.links.source} (Submission ${message.id})`)
-        void safeSendMessage(channel, '⚠️ Submission appears to be a duplicate (one or more projects with same name and/or source link found). Review recommended.')
+        await safeSendMessage(channel, '⚠️ Submission appears to be a duplicate (one or more projects with same name and/or source link found). Review recommended.')
       }
 
       try {
-        const upvoteReaction = process.env.UPVOTE_REACTION ?? '430119347881771018'
-        const downvoteReaction = process.env.UPVOTE_REACTION ?? '430119368735850506'
+        if (!process.env.UPVOTE_REACTION || !process.env.DOWNVOTE_REACTION) {
+          throw new Error(`Upvote and downvote reaction IDs not set, got upvote = ${process.env.UPVOTE_REACTION} and downvote = ${process.env.DOWNVOTE_REACTION}`)
+        }
+
+        const upvoteReaction = process.env.UPVOTE_REACTION
+        const downvoteReaction = process.env.DOWNVOTE_REACTION
 
         await message.react(upvoteReaction)
         await message.react(downvoteReaction)

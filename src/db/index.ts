@@ -47,7 +47,14 @@ export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Disco
     log.error(`User ${voter} attempted to ${type === 'add' ? 'upvote' : 'remove upvote for'} non-existent project (ID ${id})`)
     return { success: false, wasApproved: false, reason: 'Project not found', project }
   } else {
-    const hasEnoughUpvotes = hasEnoughVotes('up', type, voter, project)
+    let hasEnoughUpvotes
+
+    try {
+      hasEnoughUpvotes = hasEnoughVotes('up', type, voter, project)
+    } catch (err) {
+      // Likely cause here would be misconfiguration, if role IDs and/or voting thresholds are missing or invalid
+      return { success: false, wasApproved: false, reason: err.message, project }
+    }
 
     const toUpdate = {
       ...project,
