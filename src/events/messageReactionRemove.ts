@@ -23,7 +23,7 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
       }
 
       // Check that member existed in cache
-      if (member === undefined) {
+      if (!member) {
         return await safeSendMessage(channel, '⚠️ Your vote was not possible to remove due to identification failure. (Member not found in guild)')
       }
 
@@ -38,7 +38,7 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
       const { success, reason, project } = result
 
       // Alert of errors during the vote removal process
-      if (!success || project === undefined) {
+      if (!success || !project) {
         log.error(`Could not remove ${user.id}'s vote for project ${project?.name} (ID ${project?.id}): ${reason}`)
         return await safeSendMessage(channel, '⚠️ Your vote was not possible to remove. (Internal error)')
       }

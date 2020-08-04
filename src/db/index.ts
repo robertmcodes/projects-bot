@@ -43,7 +43,7 @@ export async function getProject (id: Discord.Snowflake): Promise<Project | unde
 export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteResult> {
   const project: Project = await db.findOne({ id })
 
-  if (project === undefined) {
+  if (!project) {
     log.error(`User ${voter} attempted to ${type === 'add' ? 'upvote' : 'remove upvote for'} non-existent project (ID ${id})`)
     return { success: false, wasApproved: false, reason: 'Project not found', project }
   } else {
@@ -68,7 +68,7 @@ export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Disco
 export async function adjustDownvotesForProject (type: 'add' | 'remove', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteResult> {
   const project: Project = await db.findOne({ id })
 
-  if (project === undefined) {
+  if (!project) {
     log.error(`User ${voter} attempted to ${type === 'add' ? 'downvote' : 'remove downvote for'} non-existent project (ID ${id})`)
     return { success: false, wasRejected: false, reason: 'Project not found', project }
   } else {
