@@ -17,6 +17,7 @@ export default (type: 'up' | 'down', operation: 'add' | 'remove', voter: Discord
 
   let hasEnoughVotes
 
+  // Because most staff also possess the Veterans role for historical purposes, staff threshold takes priority
   if (isStaff) {
     hasEnoughVotes = newVoteCount >= staffThreshold
   } else if (isVeteran) {
