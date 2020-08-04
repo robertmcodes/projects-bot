@@ -1,6 +1,7 @@
-import Discord from 'discord.js'
+import Discord, { TextChannel } from 'discord.js'
 import safeSendMessage from '../utils/safeSendMessage'
 import { adjustUpvotesForProject, adjustDownvotesForProject } from '../db'
+import createProjectEmbed from '../utils/createProjectEmbed'
 
 export default async (client: Discord.Client, reaction: Discord.MessageReaction, user: Discord.User): Promise<Discord.Message | undefined> => {
   // Ensure reaction was not added in DM, even though the ID check would already technically speaking prevent this
@@ -43,6 +44,8 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
         return await safeSendMessage(channel, '⚠️ Your vote was not possible to register. (Internal error)')
       }
 
+      log.info(`User ${user.id} (${user.tag}) ${isUpvote ? 'upvoted' : 'downvoted'} project ${project.name} (ID ${project.id})`)
+
       // Only one of these can be true per operation depending on what reaction was used
       const wasApproved = result?.wasApproved === true
       const wasRejected = result?.wasRejected === true
@@ -60,7 +63,29 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
         }
       }
 
-      log.info(`User ${user.id} (${user.tag}) ${isUpvote ? 'upvoted' : 'downvoted'} project ${project.name} (ID ${project.id})`)
+      // Post to public showcase
+      if (wasApproved) {
+        try {
+          if (!process.env.PROJECT_SHOWCASE_CHANNEL) {
+            throw new Error(`Project showcase channel ID not set, got ${process.env.PROJECT_SHOWCASE_CHANNEL}`)
+          }
+
+          // Having to type cast here and just separately check that this channel has a send method
+          // FWIW, this seems to indeed be the official recommended method by the discord.js development team: https://github.com/discordjs/discord.js/issues/3622#issuecomment-565566337
+          const showcaseChannel = guild.channels.cache.get(process.env.PROJECT_SHOWCASE_CHANNEL) as TextChannel
+
+          if (!showcaseChannel || !showcaseChannel.send) {
+            throw new Error('Project showcase channel not found in cache or is not a text channel, possible configuration error')
+          }
+
+          const embed = createProjectEmbed(project, guild)
+          await showcaseChannel.send(null, embed)
+          log.info(`Project ${project.name} (ID ${project.id}) posted to showcase channel.`)
+        } catch (err) {
+          log.error(`Could not post project ${project.name} (ID ${project.id}) to showcase channel: ${err}`)
+          await safeSendMessage(channel, '⚠️ Could not post project to showcase channel. (Internal error)')
+        }
+      }
     }
   }
 }
