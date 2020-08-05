@@ -12,8 +12,8 @@ export default (type: 'up' | 'down', operation: 'add' | 'remove', voter: Discord
   const veteransThreshold = +process.env.VETERANS_VOTING_THRESHOLD
 
   const newVoteCount = operation === 'add'
-    ? project[type === 'up' ? 'upvotes' : 'downvotes'] + 1
-    : project[type === 'up' ? 'upvotes' : 'downvotes'] - 1
+    ? project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans'] + 1
+    : project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans'] - 1
 
   let hasEnoughVotes
 
@@ -23,7 +23,7 @@ export default (type: 'up' | 'down', operation: 'add' | 'remove', voter: Discord
   } else if (isVeteran) {
     hasEnoughVotes = newVoteCount >= veteransThreshold
   } else {
-    // This should never happen thanks to permissions, but in case someone or something votes on it by accessing the channel, let's put it here anyways
+    // This should never happen thanks to permissions and prior checks, but let's put it here anyways
     log.warn(`Vote registration attempted for non-staff and non-veteran user ${voter.id}`)
     hasEnoughVotes = false
   }

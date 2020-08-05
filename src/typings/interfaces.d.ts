@@ -13,8 +13,14 @@ export interface ProjectSubmission {
 }
 
 export interface Project {
-  upvotes: number
-  downvotes: number
+  upvotes: {
+    staff: number
+    veterans: number
+  }
+  downvotes: {
+    staff: number
+    veterans: number
+  }
   approved: boolean
   rejected: boolean
   id: Discord.Snowflake
