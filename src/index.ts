@@ -8,7 +8,7 @@ global.log = logger.init()
 dotenv.config()
 ensureRequiredDirectories()
 
-const client = new Client()
+const client = new Client({ partials: ['MESSAGE', 'CHANNEL', 'REACTION'] })
 
 for (const event in eventHandlers) {
   // Have to do this here because type annotations can't be set for left-hand side ops in loops
