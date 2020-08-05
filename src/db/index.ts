@@ -115,7 +115,13 @@ export async function adjustDownvotesForProject (type: 'add' | 'remove', id: Dis
     }
 
     const voteType = isStaff ? 'staff' : 'veterans'
-    toUpdate.downvotes[voteType] = type === 'add' ? ++project.downvotes[voteType] : --project.downvotes[voteType]
+
+    if (type === 'add') {
+      toUpdate.downvotes[voteType] = ++project.downvotes[voteType]
+    } else {
+      // Ensure votes don't go negative if a role change occurs
+      toUpdate.downvotes[voteType] = project.downvotes[voteType] - 1 >= 0 ? --project.downvotes[voteType] : 0
+    }
 
     try {
       await db.update({ id }, toUpdate)
