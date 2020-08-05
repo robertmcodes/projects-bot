@@ -74,9 +74,11 @@ export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Disco
 
     const toUpdate = {
       ...project,
-      upvotes: type === 'add' ? ++project.upvotes[isStaff ? 'staff' : 'veterans'] : --project.upvotes[isStaff ? 'staff' : 'veterans'],
       approved: hasEnoughUpvotes
     }
+
+    const voteType = isStaff ? 'staff' : 'veterans'
+    toUpdate.upvotes[voteType] = type === 'add' ? ++project.upvotes[voteType] : --project.upvotes[voteType]
 
     try {
       await db.update({ id }, toUpdate)
@@ -109,9 +111,11 @@ export async function adjustDownvotesForProject (type: 'add' | 'remove', id: Dis
 
     const toUpdate = {
       ...project,
-      downvotes: type === 'add' ? ++project.downvotes[isStaff ? 'staff' : 'veterans'] : --project.downvotes[isStaff ? 'staff' : 'veterans'],
       rejected: hasEnoughDownvotes
     }
+
+    const voteType = isStaff ? 'staff' : 'veterans'
+    toUpdate.downvotes[voteType] = type === 'add' ? ++project.downvotes[voteType] : --project.downvotes[voteType]
 
     try {
       await db.update({ id }, toUpdate)
