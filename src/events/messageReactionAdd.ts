@@ -52,8 +52,13 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
 
       // If project was approved/rejected, log such and (try to) delete submission post
       if (wasApproved || wasRejected) {
-        log.info(`Project ${project.name} (ID ${project.id}) was ${wasApproved ? 'APPROVED' : 'REJECTED'} with ${project.upvotes} upvotes and ${project.downvotes} downvotes`)
-        await safeSendMessage(channel, `${wasApproved ? '✅' : '❌'} Project ${project.name} (${project.links.source}], ID ${project.id}) was **${wasApproved ? 'APPROVED' : 'REJECTED'}** by **${user.tag}** (${user.id}) with ${project.upvotes} upvotes and ${project.downvotes} downvotes.`)
+        const staffVotes = { up: project.upvotes.staff, down: project.downvotes.staff }
+        const veteranVotes = { up: project.upvotes.veterans, down: project.downvotes.veterans }
+
+        log.info(`Project ${project.name} (ID ${project.id}) was ${wasApproved ? 'approved' : 'rejected'} with ${staffVotes.up + veteranVotes.up} upvotes [Staff/vet spread: ${staffVotes.up} | ${veteranVotes.up}] and ${staffVotes.down + veteranVotes.down} downvotes [Staff/vet spread: ${staffVotes.down} | ${veteranVotes.down}]`)
+
+        const voteSituation = `**Upvotes:** **${project.upvotes.staff}** staff, **${project.upvotes.veterans}** veterans\n**Downvotes:** **${project.downvotes.staff}** staff, **${project.downvotes.veterans}** veterans`
+        await safeSendMessage(channel, `${wasApproved ? '✅' : '❌'} Project ${project.name} (${project.links.source}, ID ${project.id}) was **${wasApproved ? 'APPROVED' : 'REJECTED'}** by **${user.tag}** (${user.id}) with following vote situation:\n${voteSituation}`)
 
         try {
           await reaction.message.delete({ reason: `Project ${wasApproved ? 'approved' : 'rejected'} by ${user.tag} (${user.id})` })
