@@ -46,7 +46,7 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
       // Don't need to check for approval or rejection here as submissions are deleted upon approval/rejection
       // and a removal of a vote can never push a project beyond a positive threshold
 
-      log.info(`User ${user.id} (${user.tag}) removed their ${isUpvote ? 'upvote' : 'downvote'} project ${project.name} (ID ${project.id})`)
+      log.info(`User ${user.id} (${user.tag}) removed their ${isUpvote ? 'upvote' : 'downvote'} for project ${project.name} (ID ${project.id})`)
     }
   }
 }
