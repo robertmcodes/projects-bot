@@ -60,6 +60,7 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
 
       try {
         await registerProject(submission)
+        log.info(`Project ${submission.name} (ID ${message.id}) registered for voting.`)
       } catch (err) {
         log.error(`Project registration for submission ${message.id} failed: ${err}`)
         return await safeSendMessage(channel, '⚠️ Project registration failed. (Database error)')
