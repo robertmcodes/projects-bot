@@ -1,0 +1,8 @@
+.gitignore
+.eslintignore
+.eslintrc
+.env
+.vscode
+data
+logs
+node_modules
