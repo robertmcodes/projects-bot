@@ -26,7 +26,7 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
         submission = parseGformsEmbed(message)
       } catch (err) {
         log.error(`Parsing of submission ${message.id} failed: ${err}`)
-        return await safeSendMessage(channel, '⚠️ Could not parse submission, possibly incorrect amount of fields? (Parser error)')
+        return await safeSendMessage(channel, `⚠️ Could not parse submission: ${err.message} (Parser error)`)
       }
 
       let isDuplicate
