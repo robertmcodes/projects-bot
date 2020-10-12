@@ -10,26 +10,26 @@ on:
     tags:
       - v*
 
-  # Run tests for any PRs
+  # Run test builds for any PRs
   pull_request:
 
 env:
   IMAGE_NAME: projects-bot
 
 jobs:
-  # Run tests
+  # Build test image
   # See also https://docs.docker.com/docker-hub/builds/automated-testing/
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Run tests
+      - name: Build
         run: docker build . --file Dockerfile
 
   # Push image to Docker Hub
   # See also https://docs.docker.com/docker-hub/builds/
   push:
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
