@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build
+      - name: Build image
         run: docker build . --file Dockerfile
 
   # Push image to Docker Hub
