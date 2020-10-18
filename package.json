@@ -1,6 +1,6 @@
 {
   "name": "projects-bot",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A Discord bot to validate and publish projects showcase submissions ",
   "main": "lib/index.js",
   "scripts": {
