@@ -17,9 +17,20 @@ env:
   IMAGE_NAME: projects-bot
 
 jobs:
+  # Run ESLint and test compilation
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Lint
+        run: npm test
+      - name: Compile
+        run: npm run build
+
   # Build test image
   # See also https://docs.docker.com/docker-hub/builds/automated-testing/
   build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
