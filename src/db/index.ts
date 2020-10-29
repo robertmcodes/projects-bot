@@ -46,7 +46,7 @@ export async function getProject (id: Discord.Snowflake): Promise<Project | unde
   return project
 }
 
-export async function pause(type: 'up'|'down', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteResult> {
+export async function pause (type: 'up'|'down', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteResult> {
   const project: Project = await db.findOne({ id })
 
   if (!project) {
@@ -63,7 +63,7 @@ export async function pause(type: 'up'|'down', id: Discord.Snowflake, voter: Dis
     log.warn(`User ${voter} attempted to ${type === 'up' ? 'pause' : 'remove pause for'} project ${project.name} (ID ${id}), but member is not staff`)
     return { success: false, wasApproved: false, reason: 'Member does not have pausing privileges', project }
   }
-  
+
   let hasEnoughUpvotes,
     hasEnoughDownvotes
   try {
@@ -78,14 +78,14 @@ export async function pause(type: 'up'|'down', id: Discord.Snowflake, voter: Dis
     ...project,
     paused: type === 'up'
   }
-  
+
   try {
     await db.update({ id }, toUpdate)
   } catch (err) {
     return { success: false, wasPaused: false, reason: err.message, project }
   }
 
-  return { success: true, wasPaused: type === 'up', wasApproved: hasEnoughUpvotes, wasRejected: hasEnoughDownvotes, reason: '', project } 
+  return { success: true, wasPaused: type === 'up', wasApproved: hasEnoughUpvotes, wasRejected: hasEnoughDownvotes, reason: '', project }
 }
 
 export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteResult> {

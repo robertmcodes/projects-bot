@@ -1,4 +1,4 @@
-import Discord, { TextChannel } from 'discord.js'
+import Discord from 'discord.js'
 import safeSendMessage from '../utils/safeSendMessage'
 import { getProject, adjustUpvotesForProject, adjustDownvotesForProject, pause } from '../db'
 import showcase, { ShowcaseInput } from '../utils/showcase'
@@ -10,7 +10,7 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
 
     const isNotSelf = user.id !== client.user?.id
     const isInSubmissionChannel = channel.id === process.env.PROJECT_SUBMISSIONS_CHANNEL
-    const isValidEmoji = reaction.emoji?.id === process.env.UPVOTE_REACTION || 
+    const isValidEmoji = reaction.emoji?.id === process.env.UPVOTE_REACTION ||
       reaction.emoji?.id === process.env.DOWNVOTE_REACTION ||
       reaction.emoji?.name === process.env.PAUSE_REACTION
 
@@ -43,15 +43,14 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
       const isDownvote = reaction.emoji.id === process.env.DOWNVOTE_REACTION
       const isPause = reaction.emoji.name === process.env.PAUSE_REACTION
 
-
       // Perform actual vote operation
       const result = isUpvote
         ? await adjustUpvotesForProject('add', id, member)
-        : isPause 
-          ? await pause('up', id, member) :
-            await adjustDownvotesForProject('add', id, member)
-      
-      await showcase({
+        : isPause
+          ? await pause('up', id, member)
+          : await adjustDownvotesForProject('add', id, member)
+
+      const input: ShowcaseInput = {
         result,
         isUpvote,
         isPause,
@@ -60,7 +59,8 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
         channel,
         user,
         reaction
-      } as ShowcaseInput)
+      }
+      await showcase(input)
     }
   }
 }

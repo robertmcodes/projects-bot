@@ -13,9 +13,9 @@ export default (type: 'up' | 'down', operation: 'add' | 'remove' | 'dry', voter:
 
   const newVoteCount = operation === 'add'
     ? project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans'] + 1
-    : operation === 'dry' ? 
-      project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans'] : 
-      project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans'] - 1
+    : operation === 'dry'
+      ? project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans']
+      : project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans'] - 1
 
   let hasEnoughVotes
 

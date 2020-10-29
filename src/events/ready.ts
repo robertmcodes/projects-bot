@@ -9,7 +9,7 @@ export default (client: Discord.Client): void => {
       activity: {
         name: process.env.DISCORD_CLIENT_PRESENCE_MESSAGE,
         // To read from env, we have to type case here.
-        type: process.env.DISCORD_CLIENT_PRESENCE_TYPE as Discord.ActivityType,
+        type: process.env.DISCORD_CLIENT_PRESENCE_TYPE as Discord.ActivityType
       }
     })
   } catch (err) {

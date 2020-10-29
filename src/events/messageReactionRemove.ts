@@ -12,7 +12,7 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
     const isInSubmissionChannel = channel.id === process.env.PROJECT_SUBMISSIONS_CHANNEL
     const isValidEmoji = reaction.emoji?.id === process.env.UPVOTE_REACTION ||
       reaction.emoji.id === process.env.DOWNVOTE_REACTION ||
-      reaction.emoji.name == process.env.PAUSE_REACTION
+      reaction.emoji.name === process.env.PAUSE_REACTION
 
     let projectExists
 
@@ -43,11 +43,11 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
       const isDownvote = reaction.emoji.id === process.env.DOWNVOTE_REACTION
       const isPause = reaction.emoji.name === process.env.PAUSE_REACTION
 
-      const result = isUpvote ?
-        await adjustUpvotesForProject('remove', id, member) :
-        isPause ?
-         await pause('down', id, member) :
-         await adjustDownvotesForProject('remove', id, member)
+      const result = isUpvote
+        ? await adjustUpvotesForProject('remove', id, member)
+        : isPause
+          ? await pause('down', id, member)
+          : await adjustDownvotesForProject('remove', id, member)
 
       const { success, reason, project } = result
 
@@ -57,11 +57,11 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
         return await safeSendMessage(channel, '⚠️ Your vote was not possible to remove. (Internal error)')
       }
 
-      log.info(`User ${user.id} (${user.tag}) removed their ${isUpvote ? 'upvote' : isPause ? 'pause': 'downvote'} for project ${project.name} (ID ${project.id})`)
+      log.info(`User ${user.id} (${user.tag}) removed their ${isUpvote ? 'upvote' : isPause ? 'pause' : 'downvote'} for project ${project.name} (ID ${project.id})`)
       // Don't need to check for approval or rejection here as submissions are deleted upon approval/rejection
       // and a removal of a vote can never push a project beyond a positive threshold
       // Since we are now pausing the submission, the rejection upon pause is possible. We will check submission here.
-      await showcase({
+      const input: ShowcaseInput = {
         result,
         isUpvote,
         isDownvote,
@@ -70,7 +70,8 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
         channel,
         user,
         reaction
-      } as ShowcaseInput)
+      }
+      await showcase(input)
     }
   }
 }
