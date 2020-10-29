@@ -32,12 +32,14 @@ export interface Project {
     source: string
     other: string
   }
+  paused?: boolean
 }
 
 export interface VoteResult {
   success: boolean
   wasApproved?: boolean
   wasRejected?: boolean
+  wasPaused?: boolean
   reason: string
   project: Project | undefined
 }

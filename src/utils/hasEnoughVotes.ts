@@ -1,7 +1,7 @@
 import Discord from 'discord.js'
 import { Project } from '../typings/interfaces'
 
-export default (type: 'up' | 'down', operation: 'add' | 'remove', voter: Discord.GuildMember, project: Project): boolean => {
+export default (type: 'up' | 'down', operation: 'add' | 'remove' | 'dry', voter: Discord.GuildMember, project: Project): boolean => {
   if (!process.env.STAFF_ROLE_ID || !process.env.VETERANS_ROLE_ID || !process.env.STAFF_VOTING_THRESHOLD || !process.env.VETERANS_VOTING_THRESHOLD) {
     throw new Error(`Staff and veterans role IDs (staff = ${process.env.STAFF_ROLE_ID}, veterans = ${process.env.VETERANS_ROLE_ID}) and/or associated voting thresholds (staff = ${process.env.STAFF_VOTING_THRESHOLD}, veterans = ${process.env.VETERANS_VOTING_THRESHOLD}) not set`)
   }
@@ -13,7 +13,9 @@ export default (type: 'up' | 'down', operation: 'add' | 'remove', voter: Discord
 
   const newVoteCount = operation === 'add'
     ? project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans'] + 1
-    : project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans'] - 1
+    : operation === 'dry' ? 
+      project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans'] : 
+      project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans'] - 1
 
   let hasEnoughVotes
 
