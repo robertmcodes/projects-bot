@@ -50,6 +50,8 @@ export default async function (input: ShowcaseInput): Promise<Discord.Message | 
     log.info(`Project ${project.name} (ID ${project.id}) was ${wasApproved ? 'approved' : 'rejected'} with ${staffVotes.up + veteranVotes.up} upvotes [Staff/vet spread: ${staffVotes.up} | ${veteranVotes.up}] and ${staffVotes.down + veteranVotes.down} downvotes [Staff/vet spread: ${staffVotes.down} | ${veteranVotes.down}]`)
 
     const voteSituation = `**Upvotes:** **${project.upvotes.staff}** staff, **${project.upvotes.veterans}** veterans\n**Downvotes:** **${project.downvotes.staff}** staff, **${project.downvotes.veterans}** veterans`
+    // we have to type case to Discord.TextChannel here because otherwise, it would not be valid to use it with the sendSafeMessage method.
+    // above when the channel is checked, we also check the channel type whicih is how we know that this type will be valid.
     await safeSendMessage(logChannel as Discord.TextChannel, `${wasApproved ? '✅' : '❌'} Project **${project.name}** (${project.links.source}, ID ${project.id}) was **${wasApproved ? 'APPROVED' : 'REJECTED'}** by **${user.tag}** (${user.id}) with following vote situation:\n${voteSituation}`)
 
     try {
