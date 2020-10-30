@@ -54,14 +54,13 @@ export default async function (input: ShowcaseInput): Promise<Discord.Message | 
     // above when the channel is checked, we also check the channel type whicih is how we know that this type will be valid.
     await safeSendMessage(logChannel as Discord.TextChannel, `${wasApproved ? '✅' : '❌'} Project **${project.name}** by ** **${project.author}** (<@${project.author}>)  ** (${project.links.source}, ID ${project.id}) was **${wasApproved ? 'APPROVED' : 'REJECTED'}** by **${user.tag}** (${user.id}) with following vote situation:\n${voteSituation}`)
 
-
     try {
       const dmChannel = await user.createDM()
-      dmChannel.startTyping()
+      await dmChannel.startTyping()
       await safeSendMessage(dmChannel, `Your project (${project.name}) was ${wasApproved ? 'approved' : 'rejected'} into the project showcase. If you have any questions, please contact modmail.`)
       dmChannel.stopTyping()
     } catch (e) {
-      log.error(`Could not notify user (${user.id}) of ${wasApproved ? 'approval': 'rejection'}) of their project $(${project.name})). err: ${e.message}`)
+      log.error(`Could not notify user (${user.id}) of ${wasApproved ? 'approval' : 'rejection'}) of their project $(${project.name})). err: ${e.message}`)
       // not entirely sure what to do here??? they will just not receive a notification,
     }
     try {
