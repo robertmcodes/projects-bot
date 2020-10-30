@@ -18,16 +18,14 @@ export default async function (input: ShowcaseInput): Promise<Discord.Message | 
   const { result, guild, channel, user, reaction, isUpvote, isDownvote, isPause } = input
   const { success, reason, project } = result
 
-
   if (!process.env.PROJECT_LOG_CHANNEL) {
     throw new Error('project log channel not found in env')
   }
   const logChannelId = process.env.PROJECT_LOG_CHANNEL
   const logChannel = channel.client.channels.cache.get(logChannelId)
-  if (!logChannel || logChannel.type !== "text") {
+  if (!logChannel || logChannel.type !== 'text') {
     throw new Error(`could not find text log channel (channelID: ${logChannelId})`)
   }
-
 
   // Alert of errors during the vote process
   if (!success || !project) {
