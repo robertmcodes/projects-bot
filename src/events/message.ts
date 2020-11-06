@@ -44,15 +44,19 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
       }
 
       try {
-        if (!process.env.UPVOTE_REACTION || !process.env.DOWNVOTE_REACTION) {
-          throw new Error(`Upvote and downvote reaction IDs not set, got upvote = ${process.env.UPVOTE_REACTION} and downvote = ${process.env.DOWNVOTE_REACTION}`)
+        if (!process.env.UPVOTE_REACTION || !process.env.DOWNVOTE_REACTION || !process.env.PAUSE_REACTION) {
+          throw new Error(`Upvote/downvote/pause reaction IDs not set, got upvote = ${process.env.UPVOTE_REACTION}, downvote = ${process.env.DOWNVOTE_REACTION}, pause = ${process.env.PAUSE_REACTION}`)
         }
 
         const upvoteReaction = process.env.UPVOTE_REACTION
         const downvoteReaction = process.env.DOWNVOTE_REACTION
+        const pauseReaction = process.env.PAUSE_REACTION
 
-        await message.react(upvoteReaction)
-        await message.react(downvoteReaction)
+        await Promise.all([
+          message.react(upvoteReaction),
+          message.react(downvoteReaction),
+          message.react(pauseReaction)
+        ])
       } catch (err) {
         log.error(`Could not add upvote and downvote reaction to submission ${message.id}: ${err}`)
         return await safeSendMessage(channel, '⚠️ Could not add upvote and downvote reactions. (Discord error)')

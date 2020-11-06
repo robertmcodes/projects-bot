@@ -8,7 +8,8 @@ export default (client: Discord.Client): void => {
       status: 'online',
       activity: {
         name: process.env.DISCORD_CLIENT_PRESENCE_MESSAGE,
-        type: 'WATCHING'
+        // To read from env, we have to type case here.
+        type: process.env.DISCORD_CLIENT_PRESENCE_TYPE as Discord.ActivityType
       }
     })
   } catch (err) {

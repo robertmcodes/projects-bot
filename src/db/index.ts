@@ -46,6 +46,49 @@ export async function getProject (id: Discord.Snowflake): Promise<Project | unde
   return project
 }
 
+export async function suspendVotingForProject (enabled: boolean, id: Discord.Snowflake, suspender: Discord.GuildMember): Promise<VoteResult> {
+  const project: Project = await db.findOne({ id })
+
+  if (!project) {
+    log.error(`User ${suspender} attempted to ${enabled ? 'suspend' : 'remove suspension for'} voting on non-existent project (ID ${id})`)
+    return { success: false, wasApproved: false, reason: 'Project not found', project }
+  }
+
+  if (!process.env.STAFF_ROLE_ID) {
+    throw new Error(`Staff and veterans role IDs (staff = ${process.env.STAFF_ROLE_ID}, veterans = ${process.env.VETERANS_ROLE_ID}) not set`)
+  }
+
+  const isStaff = suspender.roles.cache.has(process.env.STAFF_ROLE_ID)
+
+  if (!isStaff) {
+    log.warn(`User ${suspender} attempted to ${enabled ? 'suspend' : 'remove suspension for'} voting on project ${project.name} (ID ${id}), but user is not staff`)
+    return { success: false, wasApproved: false, reason: 'Member does not have pausing privileges', project }
+  }
+
+  let hasEnoughUpvotes
+  let hasEnoughDownvotes
+  try {
+    hasEnoughUpvotes = hasEnoughVotes('up', 'dry', suspender, project)
+    hasEnoughDownvotes = hasEnoughVotes('down', 'dry', suspender, project)
+  } catch (err) {
+    // Likely cause here would be misconfiguration, if role IDs and/or voting thresholds are missing or invalid
+    return { success: false, reason: err.message, project }
+  }
+
+  const toUpdate = {
+    ...project,
+    paused: enabled
+  }
+
+  try {
+    await db.update({ id }, toUpdate)
+  } catch (err) {
+    return { success: false, wasPaused: false, reason: err.message, project }
+  }
+
+  return { success: true, wasPaused: enabled, wasApproved: hasEnoughUpvotes, wasRejected: hasEnoughDownvotes, reason: '', project }
+}
+
 export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteResult> {
   const project: Project = await db.findOne({ id })
 
@@ -86,7 +129,7 @@ export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Disco
       return { success: false, wasApproved: false, reason: err.message, project }
     }
 
-    return { success: true, wasApproved: hasEnoughUpvotes, reason: '', project }
+    return { success: true, wasApproved: hasEnoughUpvotes, wasPaused: project.paused, reason: '', project }
   }
 }
 
@@ -129,6 +172,6 @@ export async function adjustDownvotesForProject (type: 'add' | 'remove', id: Dis
       return { success: false, wasRejected: false, reason: err.message, project }
     }
 
-    return { success: true, wasRejected: hasEnoughDownvotes, reason: '', project }
+    return { success: true, wasRejected: hasEnoughDownvotes, wasPaused: project.paused, reason: '', project }
   }
 }
