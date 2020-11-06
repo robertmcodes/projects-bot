@@ -10,41 +10,14 @@ on:
     tags:
       - v*
 
-  # Run test builds for any PRs
-  pull_request:
-
 env:
   IMAGE_NAME: projects-bot
 
 jobs:
-  # Run ESLint and test compilation
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
-        run: npm ci
-      - name: Lint
-        run: npm test
-      - name: Compile
-        run: npm run build
-
-  # Build test image
-  # See also https://docs.docker.com/docker-hub/builds/automated-testing/
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build image
-        run: docker build . --file Dockerfile
-
   # Push image to Docker Hub
   # See also https://docs.docker.com/docker-hub/builds/
   push:
-    needs: build
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v2
       - name: Build image
