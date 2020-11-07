@@ -1,7 +1,7 @@
 import Discord from 'discord.js'
 import { Project } from '../typings/interfaces'
 
-export default (type: 'up' | 'down', operation: 'add' | 'remove' | 'dry', voter: Discord.GuildMember, project: Project): boolean => {
+export default (mode: 'up' | 'down', operation: 'add' | 'remove' | 'dry', voter: Discord.GuildMember, project: Project): boolean => {
   if (!process.env.STAFF_ROLE_ID || !process.env.VETERANS_ROLE_ID || !process.env.STAFF_VOTING_THRESHOLD || !process.env.VETERANS_VOTING_THRESHOLD) {
     throw new Error(`Staff and veterans role IDs (staff = ${process.env.STAFF_ROLE_ID}, veterans = ${process.env.VETERANS_ROLE_ID}) and/or associated voting thresholds (staff = ${process.env.STAFF_VOTING_THRESHOLD}, veterans = ${process.env.VETERANS_VOTING_THRESHOLD}) not set`)
   }
@@ -11,16 +11,20 @@ export default (type: 'up' | 'down', operation: 'add' | 'remove' | 'dry', voter:
   const staffThreshold = +process.env.STAFF_VOTING_THRESHOLD
   const veteransThreshold = +process.env.VETERANS_VOTING_THRESHOLD
 
+  const pool = mode === 'up' ? 'upvotes' : 'downvotes'
+  const audience = isStaff ? 'staff' : 'veterans'
+  const votePool = project[pool][audience]
+
   let newVoteCount
   switch (operation) {
     case 'add':
-      newVoteCount = project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans'] + 1
+      newVoteCount = votePool + 1
       break
     case 'remove':
-      newVoteCount = project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans'] - 1
+      newVoteCount = votePool - 1
       break
     case 'dry':
-      newVoteCount = project[type === 'up' ? 'upvotes' : 'downvotes'][isStaff ? 'staff' : 'veterans']
+      newVoteCount = votePool
       break
     default:
       throw new Error(`hasEnoughVotes was passed an invalid operation. (${operation})`)

@@ -8,7 +8,7 @@ lib
 .env
 
 # Logs
-logs/*
+logs
 
 # Database
-data/*
+data

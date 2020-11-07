@@ -2,7 +2,7 @@ import Discord from 'discord.js'
 import safeSendMessage from '../utils/safeSendMessage'
 import { getProject, adjustUpvotesForProject, adjustDownvotesForProject, suspendVotingForProject } from '../db'
 import showcase from '../utils/postShowcase'
-import { ShowcaseDiscordInput, ShowcaseInput } from '../typings/interfaces'
+import { ShowcaseDiscordData, ShowcaseData } from '../typings/interfaces'
 
 export default async (client: Discord.Client, reaction: Discord.MessageReaction, user: Discord.User): Promise<Discord.Message | undefined> => {
   // Ensure reaction was not added in DM, even though the ID check would already technically speaking prevent this
@@ -16,13 +16,17 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
       emoji.id === process.env.DOWNVOTE_REACTION ||
       emoji.name === process.env.PAUSE_REACTION
 
+    // Check that project exists
+
     let projectExists
 
     try {
       projectExists = !!(await getProject(id))
     } catch (err) {
-      return await safeSendMessage(channel, '⚠️ Your vote was not possible to register. (Failed to validate that message is project)')
+      return await safeSendMessage(channel, `<@${user.id}>: ⚠️ Your vote was not possible to register. (Failed to validate that message is project)`)
     }
+
+    // Check that preflights pass
 
     if (isNotSelf && isInSubmissionChannel && projectExists && isValidEmoji) {
       let member
@@ -32,42 +36,44 @@ export default async (client: Discord.Client, reaction: Discord.MessageReaction,
         member = await guild?.members.fetch(user.id)
       } catch (err) {
         log.error(`Could not fetch reacting member: ${err}`)
-        return await safeSendMessage(channel, '⚠️ Your vote was not possible to register due to identification failure. (Discord error)')
+        return await safeSendMessage(channel, `<@${user.id}>: ⚠️ Your vote was not possible to register due to identification failure. (Discord error)`)
       }
 
       // Check that member existed in cache
       if (!member) {
-        return await safeSendMessage(channel, '⚠️ Your vote was not possible to register due to identification failure. (Member not found in guild)')
+        return await safeSendMessage(channel, `<@${user.id}> ⚠️ Your vote was not possible to register due to identification failure. (Member not found in guild)`)
       }
 
-      // Don't need to check anything more here as checks that the other emoji is a downvote are already performed upstream
+      // Don't need to check downvote separately, as that would be the only other condition here
       const isUpvote = emoji.id === process.env.UPVOTE_REACTION
       const isPause = emoji.name === process.env.PAUSE_REACTION
 
       let result
-      if (isUpvote) {
+      if (isUpvote) { // Upvote
         result = await adjustUpvotesForProject('add', id, member)
-      } else if (isPause) {
+      } else if (isPause) { // Pause
         result = await suspendVotingForProject(true, id, member)
-      } else {
+      } else { // Downvote
         result = await adjustDownvotesForProject('add', id, member)
       }
 
-      const input: ShowcaseInput = {
+      const input: ShowcaseData = {
         result,
         isPause
       }
 
-      const discordInput: ShowcaseDiscordInput = {
+      const discordInput: ShowcaseDiscordData = {
         guild,
         channel,
         user,
         reaction
       }
+
       try {
         await showcase(discordInput, input)
       } catch (err) {
-        log.error(`failed to showcase project (${result.project?.name}:${result.project?.id}) by ${user.id}: ${err}`)
+        log.error(`Got error during showcase approval process: ${err}`) // Not logging more here as more detailed logs will come from downstream
+        return await safeSendMessage(channel, '⚠️ Showcase approval process failed. (Internal error)')
       }
     }
   }

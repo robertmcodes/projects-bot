@@ -1,8 +1,8 @@
 import path from 'path'
 import nedb from 'nedb-promises'
 import Discord from 'discord.js'
-import { ProjectSubmission, Project, VoteResult } from '../typings/interfaces'
-import hasEnoughVotes from '../utils/hasEnoughVotes'
+import { ProjectSubmission, Project, VoteModificationResult } from '../typings/interfaces'
+import hasEnoughVotes from '../voting/modifyVotes'
 
 let db: nedb
 
@@ -46,11 +46,11 @@ export async function getProject (id: Discord.Snowflake): Promise<Project | unde
   return project
 }
 
-export async function suspendVotingForProject (enabled: boolean, id: Discord.Snowflake, suspender: Discord.GuildMember): Promise<VoteResult> {
+export async function suspendVotingForProject (enabled: boolean, id: Discord.Snowflake, suspender: Discord.GuildMember): Promise<VoteModificationResult> {
   const project: Project = await db.findOne({ id })
 
   if (!project) {
-    log.error(`User ${suspender} attempted to ${enabled ? 'suspend' : 'remove suspension for'} voting on non-existent project (ID ${id})`)
+    log.error(`User ${suspender} attempted to ${enabled ? 'suspend' : 'remove suspension for'} voting on non-existent project ${id}`)
     return { success: false, wasApproved: false, reason: 'Project not found', project }
   }
 
@@ -61,7 +61,7 @@ export async function suspendVotingForProject (enabled: boolean, id: Discord.Sno
   const isStaff = suspender.roles.cache.has(process.env.STAFF_ROLE_ID)
 
   if (!isStaff) {
-    log.warn(`User ${suspender} attempted to ${enabled ? 'suspend' : 'remove suspension for'} voting on project ${project.name} (ID ${id}), but user is not staff`)
+    log.warn(`User ${suspender} attempted to ${enabled ? 'suspend' : 'remove suspension for'} voting on project ${project.name} (${id}), but user is not staff`)
     return { success: false, wasApproved: false, reason: 'Member does not have pausing privileges', project }
   }
 
@@ -89,7 +89,7 @@ export async function suspendVotingForProject (enabled: boolean, id: Discord.Sno
   return { success: true, wasPaused: enabled, wasApproved: hasEnoughUpvotes, wasRejected: hasEnoughDownvotes, reason: '', project }
 }
 
-export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteResult> {
+export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteModificationResult> {
   const project: Project = await db.findOne({ id })
 
   if (!process.env.STAFF_ROLE_ID || !process.env.VETERANS_ROLE_ID) {
@@ -100,10 +100,10 @@ export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Disco
   const isVeteran = voter.roles.cache.has(process.env.VETERANS_ROLE_ID)
 
   if (!project) {
-    log.error(`User ${voter} attempted to ${type === 'add' ? 'upvote' : 'remove upvote for'} non-existent project (ID ${id})`)
+    log.error(`User ${voter} attempted to ${type === 'add' ? 'upvote' : 'remove upvote for'} non-existent project (${id})`)
     return { success: false, wasApproved: false, reason: 'Project not found', project }
   } else if (!isStaff && !isVeteran) {
-    log.warn(`User ${voter} attempted to ${type === 'add' ? 'upvote' : 'remove upvote for'} project ${project.name} (ID ${id}), but member is neither staff nor veteran`)
+    log.warn(`User ${voter} attempted to ${type === 'add' ? 'upvote' : 'remove upvote for'} project ${project.name} (${id}), but member is neither staff nor veteran`)
     return { success: false, wasApproved: false, reason: 'Member does not have voting privileges', project }
   } else {
     let hasEnoughUpvotes
@@ -133,7 +133,7 @@ export async function adjustUpvotesForProject (type: 'add' | 'remove', id: Disco
   }
 }
 
-export async function adjustDownvotesForProject (type: 'add' | 'remove', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteResult> {
+export async function adjustDownvotesForProject (type: 'add' | 'remove', id: Discord.Snowflake, voter: Discord.GuildMember): Promise<VoteModificationResult> {
   const project: Project = await db.findOne({ id })
 
   if (!process.env.STAFF_ROLE_ID || !process.env.VETERANS_ROLE_ID) {
@@ -144,10 +144,10 @@ export async function adjustDownvotesForProject (type: 'add' | 'remove', id: Dis
   const isVeteran = voter.roles.cache.has(process.env.VETERANS_ROLE_ID)
 
   if (!project) {
-    log.error(`User ${voter} attempted to ${type === 'add' ? 'downvote' : 'remove downvote for'} non-existent project (ID ${id})`)
+    log.error(`User ${voter} attempted to ${type === 'add' ? 'downvote' : 'remove downvote for'} non-existent project (${id})`)
     return { success: false, wasRejected: false, reason: 'Project not found', project }
   } else if (!isStaff && !isVeteran) {
-    log.warn(`User ${voter} attempted to ${type === 'add' ? 'downvote' : 'remove downvote for'} project ${project.name} (ID ${id}), but member is neither staff nor veteran`)
+    log.warn(`User ${voter} attempted to ${type === 'add' ? 'downvote' : 'remove downvote for'} project ${project.name} (${id}), but member is neither staff nor veteran`)
     return { success: false, wasRejected: false, reason: 'Member does not have voting privileges', project }
   } else {
     const hasEnoughDownvotes = hasEnoughVotes('down', type, voter, project)
