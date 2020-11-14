@@ -1,21 +1,11 @@
-import { VoteResult } from '../typings/interfaces'
+import { ShowcaseDiscordData, ShowcaseData } from '../typings/interfaces'
 import Discord, { TextChannel } from 'discord.js'
-import safeSendMessage from '../utils/safeSendMessage'
-import createProjectEmbed from '../utils/createProjectEmbed'
+import safeSendMessage from './safeSendMessage'
+import createProjectEmbed from './createProjectEmbed'
 
-export interface ShowcaseInput {
-  result: VoteResult
-  isUpvote: boolean
-  isDownvote: boolean
-  isPause: boolean
-  guild: Discord.Guild
-  channel: Discord.TextChannel | Discord.DMChannel | Discord.NewsChannel
-  user: Discord.User
-  reaction: Discord.MessageReaction
-}
-
-export default async function (input: ShowcaseInput): Promise<Discord.Message | undefined> {
-  const { result, guild, channel, user, reaction, isUpvote, isDownvote, isPause } = input
+export default async (discordData: ShowcaseDiscordData, internalData: ShowcaseData): Promise<Discord.Message | undefined> => {
+  const { result, isPause } = internalData
+  const { guild, channel, user, reaction } = discordData
   const { success, reason, project } = result
 
   if (!process.env.PROJECT_LOG_CHANNEL) {
@@ -29,8 +19,8 @@ export default async function (input: ShowcaseInput): Promise<Discord.Message | 
 
   // Alert of errors during the vote process
   if (!success || !project) {
-    log.error(`Could not register ${user.id}'s vote for project ${project?.name} (ID ${project?.id}): ${reason}`)
-    return await safeSendMessage(channel, '⚠️ Your vote was not possible to register. (Internal error)')
+    log.error(`Could not register ${user.id}'s vote for project ${project?.name} (${project?.id}): ${reason}`)
+    return await safeSendMessage(channel, `<@${user.id}>: ⚠️ Your vote was not possible to register. (Internal error)`)
   }
 
   // Only one of these can be true per operation depending on what reaction was used
@@ -38,8 +28,9 @@ export default async function (input: ShowcaseInput): Promise<Discord.Message | 
   const wasRejected = result?.wasRejected === true
   const wasPaused = result?.wasPaused === true
 
-  if (isPause && !isUpvote && !isDownvote) {
-    log.info(`Project ${project.name} (ID ${project.id}) was ${wasPaused ? 'paused' : 'resumed'} by **${user.tag}** (${user.id})`)
+  if (isPause) {
+    log.info(`Voting on project ${project.name} (${project.id}) was ${wasPaused ? 'suspended' : 'unsuspended'} by user ${user.id} (${user.tag})`)
+    await safeSendMessage(channel, `⏯️ Voting on project **${project.name}** (${project.id}) was **${wasPaused ? 'SUSPENDED' : 'UNSUSPENDED'}** by **${user.tag}** (${user.id}).`)
   }
 
   // If project was approved/rejected, log such and (try to) delete submission post
@@ -47,12 +38,11 @@ export default async function (input: ShowcaseInput): Promise<Discord.Message | 
     const staffVotes = { up: project.upvotes.staff, down: project.downvotes.staff }
     const veteranVotes = { up: project.upvotes.veterans, down: project.downvotes.veterans }
 
-    log.info(`Project ${project.name} (ID ${project.id}) was ${wasApproved ? 'approved' : 'rejected'} with ${staffVotes.up + veteranVotes.up} upvotes [Staff/vet spread: ${staffVotes.up} | ${veteranVotes.up}] and ${staffVotes.down + veteranVotes.down} downvotes [Staff/vet spread: ${staffVotes.down} | ${veteranVotes.down}]`)
+    log.info(`Project ${project.name} (${project.id}) was ${wasApproved ? 'approved' : 'rejected'} with ${staffVotes.up + veteranVotes.up} upvotes [Staff/vet spread: ${staffVotes.up} | ${veteranVotes.up}] and ${staffVotes.down + veteranVotes.down} downvotes [Staff/vet spread: ${staffVotes.down} | ${veteranVotes.down}]`)
 
     const voteSituation = `**Upvotes:** **${project.upvotes.staff}** staff, **${project.upvotes.veterans}** veterans\n**Downvotes:** **${project.downvotes.staff}** staff, **${project.downvotes.veterans}** veterans`
-    // we have to type case to Discord.TextChannel here because otherwise, it would not be valid to use it with the sendSafeMessage method.
-    // above when the channel is checked, we also check the channel type whicih is how we know that this type will be valid.
-    await safeSendMessage(logChannel as Discord.TextChannel, `${wasApproved ? '✅' : '❌'} Project **${project.name}** by ** **${project.author}** (<@${project.author}>)  ** (${project.links.source}, ID ${project.id}) was **${wasApproved ? 'APPROVED' : 'REJECTED'}** by **${user.tag}** (${user.id}) with following vote situation:\n${voteSituation}`)
+    // we have to type cast here because logChannel can be any channel type. The type is checked above though.
+    await safeSendMessage(logChannel as Discord.TextChannel, `${wasApproved ? '✅' : '❌'} Project **${project.name}** (${project.links.source}, ID ${project.id}) was **${wasApproved ? 'APPROVED' : 'REJECTED'}** by **${user.tag}** (${user.id}) with following vote situation:\n${voteSituation}`)
 
     try {
       const dmChannel = await user.createDM()
@@ -66,7 +56,7 @@ export default async function (input: ShowcaseInput): Promise<Discord.Message | 
     try {
       await reaction.message.delete({ reason: `Project ${wasApproved ? 'approved' : 'rejected'} by ${user.tag} (${user.id})` })
     } catch (err) {
-      log.error(`Could not delete submission post for ${project.name} (ID ${project.id}): ${err}`)
+      log.error(`Could not delete submission post for ${project.name} (${project.id}): ${err}`)
       await safeSendMessage(channel, `⚠️ Could not delete project submission post. Please delete message ${project.id} manually. (Discord error)`)
     }
   }
@@ -88,9 +78,9 @@ export default async function (input: ShowcaseInput): Promise<Discord.Message | 
 
       const embed = createProjectEmbed(project, guild)
       await showcaseChannel.send(null, embed)
-      log.info(`Project ${project.name} (ID ${project.id}) posted to showcase channel.`)
+      log.info(`Project ${project.name} (${project.id}) posted to showcase channel.`)
     } catch (err) {
-      log.error(`Could not post project ${project.name} (ID ${project.id}) to showcase channel: ${err}`)
+      log.error(`Could not post project ${project.name} (${project.id}) to showcase channel: ${err}`)
       await safeSendMessage(channel, '⚠️ Could not post project to showcase channel. (Internal error)')
     }
   }

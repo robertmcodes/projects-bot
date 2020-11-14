@@ -1,6 +1,6 @@
 import Discord from 'discord.js'
 import safeSendMessage from '../utils/safeSendMessage'
-import parseGformsEmbed from '../utils/parseGformsEmbed'
+import parseGformsEmbed from '../parsers/googleFormsEmbed'
 import { checkForDuplicates, registerProject } from '../db'
 
 export default async (client: Discord.Client, message: Discord.Message): Promise<Discord.Message | undefined> => {
@@ -11,14 +11,18 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
   const isFromWebhook = message.webhookID === process.env.GOOGLE_FORMS_WEBHOOK_ID
 
   if (isInSubmissionChannel && isFromWebhook) {
+    // Check that message contains embeds
     if (message.embeds.length === 0) {
       log.warn(`Submission ${message.id} contained no embeds, skipping`)
       await safeSendMessage(channel, '⚠️ Could not register submission, message contained no embeds.')
     } else {
+      // Check that message contains only one embed
       if (message.embeds.length > 1) {
         log.warn(`Detected anomalous amount of embeds in submission ${message.id}; expected 1, got ${message.embeds.length} - selecting embed at index 0`)
         await safeSendMessage(channel, '⚠️ Submission contains more than one embed. Selecting first and ignoring subsequent ones.')
       }
+
+      // Attempt to parse GForms embed
 
       let submission
 
@@ -28,6 +32,8 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
         log.error(`Parsing of submission ${message.id} failed: ${err}`)
         return await safeSendMessage(channel, `⚠️ Could not parse submission: ${err.message} (Parser error)`)
       }
+
+      // Perform duplicate check
 
       let isDuplicate
 
@@ -42,6 +48,8 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
         log.warn(`Duplicate detected for project ${submission.name} with source link ${submission.links.source} (Submission ${message.id})`)
         await safeSendMessage(channel, '⚠️ Submission appears to be a duplicate (one or more projects with same name and/or source link found). Review recommended.')
       }
+
+      // Add reactions
 
       try {
         if (!process.env.UPVOTE_REACTION || !process.env.DOWNVOTE_REACTION || !process.env.PAUSE_REACTION) {
@@ -62,9 +70,11 @@ export default async (client: Discord.Client, message: Discord.Message): Promise
         return await safeSendMessage(channel, '⚠️ Could not add upvote and downvote reactions. (Discord error)')
       }
 
+      // If everything went flawlessly, register project
+
       try {
         await registerProject(submission)
-        log.info(`Project ${submission.name} (ID ${message.id}) registered for voting.`)
+        log.info(`Project ${submission.name} (${message.id}) registered for voting.`)
       } catch (err) {
         log.error(`Project registration for submission ${message.id} failed: ${err}`)
         return await safeSendMessage(channel, '⚠️ Project registration failed. (Database error)')

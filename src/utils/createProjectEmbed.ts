@@ -1,6 +1,6 @@
 import Discord, { MessageEmbed } from 'discord.js'
 import { Project } from '../typings/interfaces'
-import parseSourceUrl from './parseSourceUrl'
+import parseSourceUrl from '../parsers/sourceUrl'
 
 export default (project: Project, guild: Discord.Guild): Discord.MessageEmbed => {
   const author = guild.members.cache.get(project.author)
@@ -21,7 +21,7 @@ export default (project: Project, guild: Discord.Guild): Discord.MessageEmbed =>
     },
     fields: [
       { name: 'Languages/technologies used', value: project.tech },
-      { name: 'Source', value: parseSourceUrl(project.links.source), inline: true }, // TODO: Make this fancy
+      { name: 'Source', value: parseSourceUrl(project.links.source), inline: true },
       { name: 'Other links', value: project.links.other, inline: true }
     ]
   })
