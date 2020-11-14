@@ -32,7 +32,6 @@ export default async (discordData: ShowcaseDiscordData, internalData: ShowcaseDa
     log.info(`Project ${project.name} (${project.id}) was ${wasApproved ? 'approved' : 'rejected'} with ${staffVotes.up + veteranVotes.up} upvotes [Staff/vet spread: ${staffVotes.up} | ${veteranVotes.up}] and ${staffVotes.down + veteranVotes.down} downvotes [Staff/vet spread: ${staffVotes.down} | ${veteranVotes.down}]`)
 
     const voteSituation = `**Upvotes:** **${project.upvotes.staff}** staff, **${project.upvotes.veterans}** veterans\n**Downvotes:** **${project.downvotes.staff}** staff, **${project.downvotes.veterans}** veterans`
-    // we have to type cast here because logChannel can be any channel type. The type is checked above though.
     await safeSendMessage(channel, `${wasApproved ? '✅' : '❌'} Project **${project.name}** (${project.links.source}, ${project.id}) was **${wasApproved ? 'APPROVED' : 'REJECTED'}** by **${user.tag}** (${user.id}) with the following vote situation:\n${voteSituation}`)
 
     try {
