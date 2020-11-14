@@ -35,11 +35,23 @@ export interface Project {
   paused?: boolean
 }
 
-export interface VoteResult {
+export interface VoteModificationResult {
   success: boolean
   wasApproved?: boolean
   wasRejected?: boolean
   wasPaused?: boolean
   reason: string
   project: Project | undefined
+}
+
+export interface ShowcaseData {
+  result: VoteModificationResult
+  isPause: boolean
+}
+
+export interface ShowcaseDiscordData {
+  guild: Discord.Guild
+  channel: Discord.TextChannel | Discord.DMChannel | Discord.NewsChannel
+  user: Discord.User
+  reaction: Discord.MessageReaction
 }
